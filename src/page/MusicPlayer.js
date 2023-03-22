@@ -50,8 +50,6 @@ const MusicPlayer = () => {
     const [songIndex, setSongIndex] = useState(0)
     const [repeatMode, setRepeatMode] = useState('off')
     const [trackTitle, setTrackTitle] = useState();
-    const [trackArtist, setTrackArtist] = useState();
-    const [trackArtwork, setTrackArtwork] = useState();
 
     const playBackState = usePlaybackState()
     const progress = useProgress()
@@ -63,10 +61,6 @@ const MusicPlayer = () => {
 
     useEffect(() => {
         setUpPlayer()
-
-        return () => {
-            TrackPlayer.destroy()
-        }
     }, []);
 
     const spinDisk = () => {
@@ -95,14 +89,11 @@ const MusicPlayer = () => {
         outputRange: ['0deg', '360deg']
     })
 
-
     useTrackPlayerEvents([Event.PlaybackTrackChanged], async event => {
         if (event.type === Event.PlaybackTrackChanged && event.nextTrack != null) {
             const track = await TrackPlayer.getTrack(event.nextTrack);
-            const { title, artist, artwork } = track
+            const { title } = track
             setTrackTitle(title);
-            setTrackArtist(artist);
-            setTrackArtwork(artwork);
         }
     });
 
@@ -112,9 +103,6 @@ const MusicPlayer = () => {
 
     const togglePlayBack = async playBackState => {
         const currentTrack = await TrackPlayer.getCurrentTrack();
-        let trackObject = await TrackPlayer.getTrack(currentTrack);
-        console.log(`Title: ${trackObject.title}`);
-
         if (currentTrack != null) {
             if (playBackState == State.Paused || playBackState == State.Ready) {
                 await TrackPlayer.play();
@@ -128,14 +116,24 @@ const MusicPlayer = () => {
 
     const skipToNext = async () => {
         let trackIndex = await TrackPlayer.getCurrentTrack();
-        skipSong(trackIndex + 1)
-        setSongIndex(songIndex + 1)
+        if (songIndex === SongsData.length - 1) {
+            skipSong(0)
+            setSongIndex(0)
+        } else {
+            skipSong(trackIndex + 1)
+            setSongIndex(songIndex + 1)
+        }
     }
 
     const skipToPrev = async () => {
         let trackIndex = await TrackPlayer.getCurrentTrack();
-        skipSong(trackIndex - 1)
-        setSongIndex(songIndex - 1)
+        if (songIndex === 0) {
+            setSongIndex(SongsData.length - 1)
+            skipSong(SongsData.length - 1)
+        } else {
+            skipSong(trackIndex - 1)
+            setSongIndex(songIndex - 1)
+        }
     }
 
     const handleSelectSong = (song) => {
@@ -177,9 +175,8 @@ const MusicPlayer = () => {
 
     return (
         <View style={styles.container}>
-
             <ImageBackground
-                source={{ uri: SongsData[songIndex].artwork }}
+                source={SongsData[songIndex].artwork}
                 resizeMode='cover'
                 blurRadius={60}
                 style={[styles.backgroundImg, StyleSheet.absoluteFillObject]}
@@ -192,12 +189,11 @@ const MusicPlayer = () => {
                     <Text style={styles.nowPlayingArtist}> {SongsData[songIndex].artist} </Text>
 
                     <Animated.Image
-                        source={{ uri: SongsData[songIndex].artwork }}
+                        source={SongsData[songIndex].artwork}
                         style={[styles.diskStyle,
                         { transform: [{ rotate: spinInterpolate }] }]}
                         resizeMode={'cover'}
                     />
-
                 </View>
 
                 {/* Seekbar */}

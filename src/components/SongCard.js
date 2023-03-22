@@ -8,7 +8,7 @@ export default function SongCard({ image, songName, songAuthor, onSongPress, onS
         <View style={[styles.container,
         { opacity: isSelected ? 1 : 0.5 }]}>
             <TouchableOpacity style={styles.song} onPress={onSongPress}>
-                <Image source={{ uri: image }}
+                <Image source={image}
                     style={styles.songImage}
                     resizeMode='cover'
                 />
